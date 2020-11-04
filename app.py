@@ -5,19 +5,20 @@ Created on Sat Oct 17 19:58:03 2020
 
 @author: albanilm
 """
-
+import os
 import tweepy
 import mysql.connector
 import json
 import time
 from datetime import date
+#import sys
 
-#Twiiter credentials
-credentials = {}  
-credentials['CONSUMER_KEY'] = 'IIajvG2VvHllyG8tYysSlGQe9'
-credentials['CONSUMER_SECRET'] = 'zHeY7zItz591Yd2IVoHRzTioIPj2dOO2JI4TUdlI4aJLYVLvyJ'
-credentials['ACCESS_TOKEN'] = '1436620597-UqzBMysMZqxOjhh9EKIZmLuCMFpy63ffykTnLVR'
-credentials['ACCESS_SECRET'] = 'WDg9YCMptNschwctTIrmuIho2jb1uvjXmxzzelZUIv1JM'
+#Twitter credentials
+credentials = {}
+credentials['CONSUMER_KEY'] = os.environ['TWCONSUMER_KEY']
+credentials['CONSUMER_SECRET'] = os.environ['TWCONSUMER_SECRET']
+credentials['ACCESS_TOKEN'] = os.environ['TWACCESS_TOKEN']
+credentials['ACCESS_SECRET'] = os.environ['TWACCESS_SECRET']
 
 #RDS credentials
 RDSHOST = "db-arpic.cjdm15sdlirv.us-east-1.rds.amazonaws.com"
@@ -67,6 +68,9 @@ def main():
     #Get mentions
     last_twitter_id = getLastTwiid(FILE_TNAME)
     public_tweets = api.mentions_timeline(last_twitter_id, tweet_mode='extend')
+
+    print(str(len(public_tweets)) + " number of statuses have been mentioned.") 
+    #sys.exit('Debug')
     if public_tweets:
         for tweet in reversed(public_tweets):
             user_info ={   
@@ -79,6 +83,7 @@ def main():
             json_user = json.dumps(user_info, indent = 4) 
             url_msg = 'https://twitter.com/'+tweet.user.screen_name+'/status/'+str(tweet.user.id)
             full_msg = tweet.text+'/n/n **Responder:**'+url_msg
+            #print(tweet.text)
             arpicInsertRdsTwitter(mydb,json_user ,full_msg)
             print('- Add twit '+str(tweet.id))
             setLastTwiid(FILE_TNAME,tweet.id)
@@ -92,6 +97,6 @@ if __name__ == '__main__':
     while True:
         main()
         time.sleep(CRON_TIME)
-        print("Scanning Twitter messages...")
+        print("Scanning ARPIC Twitter messages V2...")
 
 
